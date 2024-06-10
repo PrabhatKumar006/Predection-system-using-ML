@@ -1,0 +1,62 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
+# Sample Data Loading
+data = pd.read_csv('students_borrowing_data1.csv') # Assume this CSV contains your dataset
+data.head()
+
+date_format = '%Y-%m-%d'
+
+# Parse the dates with a specified format
+data['borrow_date'] = pd.to_datetime(data['borrow_date'], format=date_format)
+data['due_date'] = pd.to_datetime(data['due_date'], format=date_format)
+
+# Feature Engineering
+data['borrow_date'] = pd.to_datetime(data['borrow_date'])
+data['due_date'] = pd.to_datetime(data['due_date'])
+data['borrow_month'] = data['borrow_date'].dt.month
+data['borrow_day_of_week'] = data['borrow_date'].dt.dayofweek
+data['due_month'] = data['due_date'].dt.month
+data['due_day_of_week'] = data['due_date'].dt.dayofweek
+data['borrow_duration'] = (data['due_date'] - data['borrow_date']).dt.days
+
+# Encoding Categorical Variables
+label_encoder = LabelEncoder()
+data['gender_encoded'] = label_encoder.fit_transform(data['gender'])
+
+# Selecting Features and Target
+features = ['gender_encoded', 'borrow_month', 'borrow_day_of_week', 'due_month', 'due_day_of_week', 'borrow_duration']
+X = data[features]
+y = data['return_status'] # Assuming 0 for not returned on time, 1 for returned on time
+
+# Splitting Data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+print('X_train', X_train.shape)
+print('y_train', y_train.shape)
+
+# print dimension of test set
+print('X_test', X_test.shape)
+print('y_test', y_test.shape)from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+import joblib
+# Assuming X_train, X_test, y_train, y_test are already defined from train_test_split
+
+# Create a Random Forest classifier
+forest_model = RandomForestClassifier(n_estimators=100, random_state=42)
+
+# Fit the model to the training data
+forest_model.fit(X_train, y_train)
+
+# Predict on the testing data
+predictions = forest_model.predict(X_test)
+
+# Calculate accuracy
+accuracy = accuracy_score(y_test, predictions)
+print("Accuracy:", accuracy)
+
+joblib.dump(forest_model, 'trained_random_forest_model.pkl')
